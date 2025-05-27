@@ -249,30 +249,31 @@ class Messages(private val binding : FlutterPlugin.FlutterPluginBinding,
     }
 
     override fun registerTexture(): Pigeon.RegisterTextureReply {
-        val surfaceProducer = binding.textureRegistry.createSurfaceProducer()
-        val id = surfaceProducer.id().toInt()
-        surfaceProducers.put(id, surfaceProducer)
+    val surfaceProducer = binding.textureRegistry.createSurfaceProducer()
+    val id = surfaceProducer.id().toInt()
+    surfaceProducers.put(id, surfaceProducer)
 
-        surfaceProducer.setCallback(object : Callback {
-            override fun onSurfaceAvailable() {
-                documentStatesPerSurface[id]?.let { documentUpdate ->
-                    onDocumentOrSurfaceChanged(
-                        surfaceProducer.surface,
-                        documentUpdate,
-                        result = null,
-                    )
-                }
+    // Updated callback implementation
+    surfaceProducer.setCallback(object : Callback {
+        override fun onSurfaceCreated(surface: Surface) {
+            documentStatesPerSurface[id]?.let { documentUpdate ->
+                onDocumentOrSurfaceChanged(
+                    surface,
+                    documentUpdate,
+                    result = null,
+                )
             }
+        }
 
-            override fun onSurfaceCleanup() {
-                // ignore - Surface is used once to draw bitmap
-            }
-        })
+        override fun onSurfaceReleased() {
+            // Cleanup if needed
+        }
+    })
 
-        val result = Pigeon.RegisterTextureReply()
-        result.id = id.toLong()
-        return result
-    }
+    val result = Pigeon.RegisterTextureReply()
+    result.id = id.toLong()
+    return result
+}
 
     override fun updateTexture(
         message: Pigeon.UpdateTextureMessage,
